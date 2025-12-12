@@ -1,0 +1,32 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.buildlog/
+.history
+.svn/
+
+# IntelliJ
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# Flutter
+.metadata
+.packages
+.flutter-plugins
+.flutter-plugins-dependencies
+build/
+app/
+.dart_tool/
+ios/.symlinks/
+ios/Flutter/App.framework
+ios/Flutter/flutter_assets/
+android/app/src/main/assets/flutter_assets/
+
+# Ignore Generated private key
+/android/key.properties
