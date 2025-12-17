@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
+import 'package:home_widget/home_widget.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  MobileAds.instance.initialize();
   runApp(const MoodApp());
 }
 
@@ -118,12 +122,87 @@ class _QuoteScreenState extends State<QuoteScreen> {
 
   String currentQuote = "Vibe Ink'e Hoşgeldin!";
   Color currentColor = Colors.cyanAccent;
+  
+  // AdMob reklamları
+  BannerAd? _bannerAd;
+  InterstitialAd? _interstitialAd;
+  int _quoteChangeCount = 0;
+  
+  // Test Ad Unit IDs - Replace with your actual Ad Unit IDs from AdMob
+  static const String _bannerAdUnitId = 'ca-app-pub-3940259942542244/6300978111';
+  static const String _interstitialAdUnitId = 'ca-app-pub-3940259942542244/1033173712';
 
   @override
   void initState() {
     super.initState();
+    // Widget'ı başlat
+    _initHomeWidget();
+    // Reklamları yükle
+    _loadBannerAd();
+    _loadInterstitialAd();
     // Uygulama açılır açılmaz ilk sözü seçsin
     changeQuote();
+  }
+  
+  @override
+  void dispose() {
+    _bannerAd?.dispose();
+    _interstitialAd?.dispose();
+    super.dispose();
+  }
+  
+  void _loadBannerAd() {
+    _bannerAd = BannerAd(
+      adUnitId: _bannerAdUnitId,
+      size: AdSize.banner,
+      request: const AdRequest(),
+      listener: BannerAdListener(
+        onAdLoaded: (_) {
+          setState(() {});
+        },
+        onAdFailedToLoad: (ad, err) {
+          print('Banner ad failed to load: $err');
+          ad.dispose();
+        },
+      ),
+    );
+    _bannerAd?.load();
+  }
+  
+  void _loadInterstitialAd() {
+    InterstitialAd.load(
+      adUnitId: _interstitialAdUnitId,
+      request: const AdRequest(),
+      adLoadCallback: InterstitialAdLoadCallback(
+        onAdLoaded: (ad) {
+          _interstitialAd = ad;
+          _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
+            onAdDismissedFullScreenContent: (ad) {
+              ad.dispose();
+              _loadInterstitialAd(); // Yeni reklam yükle
+            },
+            onAdFailedToShowFullScreenContent: (ad, err) {
+              print('Interstitial ad failed to show: $err');
+              ad.dispose();
+              _loadInterstitialAd();
+            },
+          );
+        },
+        onAdFailedToLoad: (err) {
+          print('Interstitial ad failed to load: $err');
+        },
+      ),
+    );
+  }
+  
+  void _showInterstitialAd() {
+    if (_interstitialAd != null) {
+      _interstitialAd?.show();
+    }
+  }
+
+  Future<void> _initHomeWidget() async {
+    // Android için app group ID gerekli değil
   }
 
   void changeQuote() {
@@ -143,7 +222,28 @@ class _QuoteScreenState extends State<QuoteScreen> {
       // Rastgele seç
       currentQuote = activePool[Random().nextInt(activePool.length)];
       currentColor = neonColors[Random().nextInt(neonColors.length)];
+      
+      // Widget'ı güncelle
+      _updateWidget();
+      
+      // Her 5 quote değişiminde interstitial reklam göster
+      _quoteChangeCount++;
+      if (_quoteChangeCount % 5 == 0) {
+        _showInterstitialAd();
+      }
     });
+  }
+
+  Future<void> _updateWidget() async {
+    try {
+      await HomeWidget.saveWidgetData<String>('quote', currentQuote);
+      await HomeWidget.updateWidget(
+        androidName: 'HomeWidgetProvider',
+      );
+    } catch (e) {
+      // Widget güncelleme hatası - sessizce devam et
+      print('Widget güncelleme hatası: $e');
+    }
   }
 
   @override
@@ -180,7 +280,7 @@ class _QuoteScreenState extends State<QuoteScreen> {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.only(bottom: 50.0),
+                padding: const EdgeInsets.only(bottom: 20.0),
                 child: ElevatedButton(
                   onPressed: changeQuote,
                   style: ElevatedButton.styleFrom(
@@ -192,11 +292,19 @@ class _QuoteScreenState extends State<QuoteScreen> {
                     ),
                   ),
                   child: const Text(
-                    "MOOD'U DEĞİŞTİR",
+                    "Change Mood",
                     style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.5),
                   ),
                 ),
               ),
+              // Banner reklam
+              if (_bannerAd != null)
+                Container(
+                  alignment: Alignment.center,
+                  width: _bannerAd!.size.width.toDouble(),
+                  height: _bannerAd!.size.height.toDouble(),
+                  child: AdWidget(ad: _bannerAd!),
+                ),
             ],
           ),
         ),
