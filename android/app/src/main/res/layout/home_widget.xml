@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/widget_bg"
+    android:gravity="center"
+    android:padding="16dp">
+    <TextView
+        android:id="@+id/widget_quote"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Her yeni gun, yeni bir baslangiçtir."
+        android:textColor="#FF10b981"
+        android:textSize="13sp"
+        android:fontFamily="sans-serif-medium"
+        android:textStyle="italic"
+        android:gravity="center"
+        android:lineSpacingMultiplier="1.45" />
+    <TextView
+        android:id="@+id/widget_label"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:text="VIBE INK"
+        android:textColor="#55FFFFFF"
+        android:textSize="9sp"
+        android:letterSpacing="0.2"
+        android:gravity="center" />
+</LinearLayout>
